@@ -1,0 +1,54 @@
+DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Mahsulotlar</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="product-list"></div>
+    <button onclick="checkout()">Savatga qo'shish</button>
+
+    <script>
+        let cart = {};
+
+        function loadProducts() {
+            fetch('/api/products/')
+                .then(response => response.json())
+                .then(products => {
+                    const productList = document.getElementById('product-list');
+                    products.forEach(product => {
+                        const item = document.createElement('div');
+                        item.innerHTML = `
+                            <p>${product.name} - ${product.price} so'm</p>
+                            <button onclick="decrease(${product.id})">-</button>
+                            <span id="count-${product.id}">0</span>
+                            <button onclick="increase(${product.id})">+</button>
+                        `;
+                        productList.appendChild(item);
+                    });
+                });
+        }
+
+        function increase(id) {
+            if (!cart[id]) cart[id] = 0;
+            cart[id]++;
+            document.getElementById(`count-${id}`).innerText = cart[id];
+        }
+
+        function decrease(id) {
+            if (cart[id] > 0) {
+                cart[id]--;
+                document.getElementById(`count-${id}`).innerText = cart[id];
+            }
+        }
+
+        function checkout() {
+            const selectedProducts = Object.entries(cart).map(([id, count]) => ({ id, count })).filter(p => p.count > 0);
+            Telegram.WebApp.sendData(JSON.stringify(selectedProducts));
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
